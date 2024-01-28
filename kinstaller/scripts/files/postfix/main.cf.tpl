@@ -41,7 +41,7 @@ smtpd_tls_auth_only = no
 smtpd_tls_CApath = /etc/ssl/certs
 smtpd_tls_key_file = %tls_key_file
 smtpd_tls_cert_file = %tls_cert_file
-smtpd_tls_dh1024_param_file = ${config_directory}/dh2048.pem
+smtpd_tls_dh1024_param_file = ${config_directory}/ffdhe%{dhe_group}.pem
 smtpd_tls_loglevel = 1
 smtpd_tls_session_cache_database = btree:$data_directory/smtpd_tls_session_cache
 smtpd_tls_security_level = may
@@ -57,6 +57,11 @@ smtpd_tls_exclude_ciphers = aNULL, MD5 , DES, ADH, RC4, PSD, SRP, 3DES, eNULL
 # Enable elliptic curve cryptography
 smtpd_tls_eecdh_grade = strong
 
+# SMTP Smuggling prevention
+# See https://www.postfix.org/smtp-smuggling.html
+smtpd_data_restrictions = reject_unauth_pipelining
+smtpd_forbid_unauth_pipelining = yes
+
 # Use TLS if this is supported by the remote SMTP server, otherwise use plaintext.
 smtp_tls_CApath = /etc/ssl/certs
 smtp_tls_security_level = may
@@ -67,10 +72,10 @@ smtp_tls_exclude_ciphers = EXPORT, LOW
 #
 %{dovecot_enabled}virtual_transport = lmtp:unix:private/dovecot-lmtp
 
-virtual_mailbox_domains = proxy:%{db_driver}:/etc/postfix/sql-domains.cf
-virtual_alias_domains = proxy:%{db_driver}:/etc/postfix/sql-domain-aliases.cf
-virtual_alias_maps =
-        proxy:%{db_driver}:/etc/postfix/sql-aliases.cf
+%{dovecot_enabled}virtual_mailbox_domains = proxy:%{db_driver}:/etc/postfix/sql-domains.cf
+%{dovecot_enabled}virtual_alias_domains = proxy:%{db_driver}:/etc/postfix/sql-domain-aliases.cf
+%{dovecot_enabled}virtual_alias_maps =
+%{dovecot_enabled}        proxy:%{db_driver}:/etc/postfix/sql-aliases.cf
 
 ## Relay domains
 #

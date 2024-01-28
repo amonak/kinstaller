@@ -10,7 +10,7 @@ from .. import system
 from .. import utils
 
 
-class Installer(object):
+class Installer:
     """Simple installer for one application."""
 
     appname = None
@@ -52,8 +52,8 @@ class Installer(object):
             sudo_user=self.config.get("kalabash", "user")
             )
         condition = (
-            (kalabash_version[0] == 2 and kalabash_version[1] >= 2) or
-            kalabash_version[0] > 2
+            (int(kalabash_version[0]) == 2 and int(kalabash_version[1]) >= 2) or
+            int(kalabash_version[0]) > 2
             )
         return condition
 

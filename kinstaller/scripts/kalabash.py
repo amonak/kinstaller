@@ -44,7 +44,7 @@ class Kalabash(base.Installer):
 
     def __init__(self, *args, **kwargs):
         """Get configuration."""
-        super(Kalabash, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.venv_path = self.config.get("kalabash", "venv_path")
         self.instance_path = self.config.get("kalabash", "instance_path")
         self.extensions = self.config.get("kalabash", "extensions").split()
@@ -96,15 +96,6 @@ class Kalabash(base.Installer):
                     packages.append("{}{}".format(extension, req_version))
                 else:
                     packages.append(extension)
-        # Temp fix for django-braces
-        python.install_package(
-            "django-braces", self.venv_path, upgrade=self.upgrade,
-            sudo_user=self.user
-        )
-        if self.dbengine == "postgres":
-            packages.append("psycopg2-binary\<2.9")
-        else:
-            packages.append("mysqlclient")
         if sys.version_info.major == 2 and sys.version_info.micro < 9:
             # Add extra packages to fix the SNI issue
             packages += ["pyOpenSSL"]
@@ -114,30 +105,25 @@ class Kalabash(base.Installer):
             sudo_user=self.user,
             beta=self.config.getboolean("kalabash", "install_beta")
         )
-        if self.devmode:
-            # FIXME: use dev-requirements instead
-            python.install_packages(
-                ["django-bower", "django-debug-toolbar"], self.venv_path,
-                upgrade=self.upgrade, sudo_user=self.user)
 
-#        # Install version specific modules to the venv
-#        kalabash_version = ".".join(str(i) for i in python.get_package_version(
-#            "kalabash", self.venv_path, sudo_user=self.user
-#        ))
-#        # Database:
-#        db_file = "postgresql"
-#        if self.dbengine != "postgres":
-#            db_file = "mysql"
-#        db_file += "-requirements.txt"
-#
-#        python.install_package_from_remote_requirements(
-#            f"https://raw.githubusercontent.com/amonak/kalabash/{kalabash_version}/{db_file}",
-#            venv=self.venv_path)
-#        # Dev mode:
-#        if self.devmode:
-#            python.install_package_from_remote_requirements(
-#                f"https://raw.githubusercontent.com/amonak/kalabash/{kalabash_version}/dev-requirements.txt",
-#                venv=self.venv_path)
+        # Install version specific modules to the venv
+        kalabash_version = ".".join(str(i) for i in python.get_package_version(
+            "kalabash", self.venv_path, sudo_user=self.user
+        ))
+        # Database:
+        db_file = "postgresql"
+        if self.dbengine != "postgres":
+            db_file = "mysql"
+        db_file += "-requirements.txt"
+
+        python.install_package_from_remote_requirements(
+            f"https://raw.githubusercontent.com/kalabash/kalabash/{kalabash_version}/{db_file}",
+            venv=self.venv_path)
+        # Dev mode:
+        if self.devmode:
+            python.install_package_from_remote_requirements(
+                f"https://raw.githubusercontent.com/kalabash/kalabash/{kalabash_version}/dev-requirements.txt",
+                venv=self.venv_path)
 
     def _deploy_instance(self):
         """Deploy Kalabash."""
@@ -208,7 +194,7 @@ class Kalabash(base.Installer):
 
     def setup_database(self):
         """Additional config."""
-        super(Kalabash, self).setup_database()
+        super().setup_database()
         if not self.amavis_enabled:
             return
         self.backend.grant_access(
@@ -216,7 +202,7 @@ class Kalabash(base.Installer):
 
     def get_packages(self):
         """Include extra packages if needed."""
-        packages = super(Kalabash, self).get_packages()
+        packages = super().get_packages()
         condition = (
             package.backend.FORMAT == "rpm" and
             sys.version_info.major == 2 and
@@ -242,7 +228,9 @@ class Kalabash(base.Installer):
         # Add worker for dkim if needed
         if self.kalabash_2_2_or_greater:
             config_files.append(
-                "supervisor-rq=/etc/supervisor/conf.d/kalabash-worker.conf")
+                "supervisor-rq-dkim=/etc/supervisor/conf.d/kalabash-dkim-worker.conf")
+            config_files.append(
+                "supervisor-rq-base=/etc/supervisor/conf.d/kalabash-base-worker.conf")
         return config_files
 
     def get_template_context(self):
@@ -315,16 +303,18 @@ class Kalabash(base.Installer):
 
     def post_run(self):
         """Additional tasks."""
+        if 'centos' in utils.dist_name():
+            system.enable_and_start_service("redis")
+        else:
+            system.enable_and_start_service("redis-server")
         self._deploy_instance()
         if not self.upgrade:
             self.apply_settings()
 
         if 'centos' in utils.dist_name():
             supervisor = "supervisord"
-            system.enable_and_start_service("redis")
         else:
             supervisor = "supervisor"
-            system.enable_and_start_service("redis-server")
         # Restart supervisor
         system.enable_service(supervisor)
         utils.exec_cmd("service {} stop".format(supervisor))
