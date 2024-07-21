@@ -127,12 +127,12 @@ class Kalabash(base.Installer):
         db_file += "-requirements.txt"
 
         python.install_package_from_remote_requirements(
-            f"https://raw.githubusercontent.com/kalabash/kalabash/{kalabash_version}/{db_file}",
+            f"https://raw.githubusercontent.com/amonak/kalabash/{kalabash_version}/{db_file}",
             venv=self.venv_path)
         # Dev mode:
         if self.devmode:
             python.install_package_from_remote_requirements(
-                f"https://raw.githubusercontent.com/kalabash/kalabash/{kalabash_version}/dev-requirements.txt",
+                f"https://raw.githubusercontent.com/amonak/kalabash/{kalabash_version}/dev-requirements.txt",
                 venv=self.venv_path)
 
     def _deploy_instance(self):

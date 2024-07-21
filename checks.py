@@ -11,7 +11,7 @@ def check_version():
     with open("version.txt", "r") as version:
         local_version = version.readline()
     remote_version = ""
-    with urlopen("https://raw.githubusercontent.com/kalabash/kinstaller/master/version.txt") as r_version:
+    with urlopen("https://raw.githubusercontent.com/amonak/kinstaller/master/version.txt") as r_version:
         remote_version = r_version.read().decode()
     if local_version == "" or remote_version == "":
         utils.printcolor(
