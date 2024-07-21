@@ -65,21 +65,31 @@ class Kalabash(base.Installer):
 
     def is_extension_ok_for_version(self, extension, version):
         """Check if extension can be installed with this kbash version."""
-        if extension not in compatibility_matrix.EXTENSIONS_AVAILABILITY:
-            return True
         version = utils.convert_version_to_int(version)
-        min_version = compatibility_matrix.EXTENSIONS_AVAILABILITY[extension]
-        min_version = utils.convert_version_to_int(min_version)
-        return version >= min_version
+        if extension in compatibility_matrix.EXTENSIONS_AVAILABILITY:
+            min_version = compatibility_matrix.EXTENSIONS_AVAILABILITY[extension]
+            min_version = utils.convert_version_to_int(min_version)
+            return version >= min_version
+        if extension in compatibility_matrix.REMOVED_EXTENSIONS:
+            max_version = compatibility_matrix.REMOVED_EXTENSIONS[extension]
+            max_version = utils.convert_version_to_int(max_version)
+            return version < max_version
+        return True
 
     def _setup_venv(self):
         """Prepare a dedicated virtualenv."""
-        python.setup_virtualenv(
-            self.venv_path, sudo_user=self.user, python_version=3)
+        python.setup_virtualenv(self.venv_path, sudo_user=self.user)
         packages = ["rrdtool"]
         version = self.config.get("kalabash", "version")
         if version == "latest":
             packages += ["kalabash"] + self.extensions
+            for extension in list(self.extensions):
+                if extension in compatibility_matrix.REMOVED_EXTENSIONS.keys():
+                    self.extensions.remove(extension)
+            self.extensions = [
+                extension for extension in self.extensions
+                if extension not in compatibility_matrix.REMOVED_EXTENSIONS
+            ]
         else:
             matrix = compatibility_matrix.COMPATIBILITY_MATRIX[version]
             packages.append("kalabash=={}".format(version))
@@ -117,12 +127,12 @@ class Kalabash(base.Installer):
         db_file += "-requirements.txt"
 
         python.install_package_from_remote_requirements(
-            f"https://raw.githubusercontent.com/amonak/kalabash/{kalabash_version}/{db_file}",
+            f"https://raw.githubusercontent.com/kalabash/kalabash/{kalabash_version}/{db_file}",
             venv=self.venv_path)
         # Dev mode:
         if self.devmode:
             python.install_package_from_remote_requirements(
-                f"https://raw.githubusercontent.com/amonak/kalabash/{kalabash_version}/dev-requirements.txt",
+                f"https://raw.githubusercontent.com/kalabash/kalabash/{kalabash_version}/dev-requirements.txt",
                 venv=self.venv_path)
 
     def _deploy_instance(self):

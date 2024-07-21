@@ -57,12 +57,12 @@ class DEBPackage(Package):
     def install(self, name):
         """Install a package."""
         self.update()
-        utils.exec_cmd("apt-get -o Dpkg::Progress-Fancy=0 install --quiet --assume-yes {}".format(name))
+        utils.exec_cmd("apt-get -o Dpkg::Progress-Fancy=0 install --quiet --assume-yes -o DPkg::options::=--force-confold {}".format(name))
 
     def install_many(self, names):
         """Install many packages."""
         self.update()
-        return utils.exec_cmd("apt-get -o Dpkg::Progress-Fancy=0 install --quiet --assume-yes {}".format(
+        return utils.exec_cmd("apt-get -o Dpkg::Progress-Fancy=0 install --quiet --assume-yes -o DPkg::options::=--force-confold {}".format(
             " ".join(names)))
 
     def get_installed_version(self, name):
@@ -108,7 +108,7 @@ def get_backend():
     """Return the appropriate package backend."""
     distname = utils.dist_name()
     backend = None
-    if distname in ["debian", "debian gnu/linux", "ubuntu"]:
+    if distname in ["debian", "debian gnu/linux", "ubuntu", "linuxmint"]:
         backend = DEBPackage
     elif "centos" in distname:
         backend = RPMPackage

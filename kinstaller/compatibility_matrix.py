@@ -21,13 +21,14 @@ COMPATIBILITY_MATRIX = {
         "kalabash-sievefilters": ">=1.1.1",
         "kalabash-webmail": ">=1.2.0",
     },
-    "2.1.0": {
-        "kalabash-pdfcredentials": None,
-        "kalabash-dmarc": None,
-        "kalabash-imap-migration": None,
-    },
 }
 
 EXTENSIONS_AVAILABILITY = {
     "kalabash-contacts": "1.7.4",
+}
+
+REMOVED_EXTENSIONS = {
+    "kalabash-pdfcredentials": "2.1.0",
+    "kalabash-dmarc": "2.1.0",
+    "kalabash-imap-migration": "2.1.0"
 }
