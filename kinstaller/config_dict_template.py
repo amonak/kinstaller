@@ -189,7 +189,6 @@ ConfigDictTemplate = [
                 "option": "extensions",
                 "default": (
                     "kalabash-amavis "
-                    "kalabash-postfix-autoreply kalabash-sievefilters "
                     "kalabash-webmail kalabash-contacts "
                     "kalabash-radicale"
                 ),
